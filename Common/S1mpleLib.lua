@@ -1,4 +1,4 @@
-S1mpleLibVersion = 1.0
+S1mpleLibVersion = 1.1
 
 --[[
     ###############################
@@ -409,6 +409,11 @@ function math.perc(current, max)
     return current/max*100
 end
 
+function WorldToScreen (obj)
+    if not obj.x then obj = obj.pos end
+    local V = Vector(obj.x, obj.y, obj.z)
+    return V:To2D()
+end
 
 --[[
     "Enum's"
@@ -423,7 +428,7 @@ end
 
     DAMAGE_MAGIC = 1
     DAMAGE_PHYSIC = 2
-    DAMAGE_MISC = 3
+    DAMAGE_MIXED = 3
     DAMAGE_TRUE = 4
     DAMAGE_OTHER = 5
     DAMAGE_NONE = 6
@@ -433,7 +438,18 @@ end
     TEAM_OTHER = 300
 
 --[[
-    Spell Class
+###############################
+    ###############################
+        ###############################
+            ###############################
+                Spell Class
+            ###############################
+        ###############################
+    ###############################
+###############################
+--]]
+
+--[[
     SpellSlot = {_Q, _W, _E, _R,
                 ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6, ITEM_7,
                 SUMMONER_1, SUMMONER_2}
@@ -453,8 +469,6 @@ end
         for cone:
             coneAngle (number)
             coneDistance (number)
-
-
     }
 --]]
 
@@ -490,7 +504,7 @@ function Spell:GetDamage(target)
     if(myHero:GetSpellData(self.slot).level == 0)then
         return 0
     end
-    return self.spelldata.damageformular(myHero, target)
+    return self.spelldata.damageformular(myHero, target, myHero:GetSpellData(self.slot).level)
 end
 
 function Spell:GetManaCost (level)
@@ -500,4 +514,44 @@ end
 
 function Spell:GetLevel ()
     return myHero:GetSpellData(self.slot).level
+end
+
+function Spell:GetRealDamage(target)
+    if(not self:CanUseSpell(target))then return 0 end
+
+    if(self.spelldata.damagetype == DAMAGE_MAGIC)then
+        local dmg_mult = 1
+        local targetArmor = target.magicResist * myHero.magicPenPercent - myHero.magicPen
+        if targetArmor >= 0 then
+            dmg_mult = 100 / (100 + targetArmor)*dmg_mult
+        else
+            dmg_mult = dmg_mult*1
+        end
+        local dmg = dmg_mult * self:GetDamage(target)
+        return dmg
+
+    elseif(self.spelldata.damagetype == DAMAGE_PHYSIC)then
+        local dmg_mult = 1
+        local targetArmor = target.armor * myHero.armorPenPercent - myHero.armorPen
+        if targetArmor >= 0 then
+            dmg_mult = 100 / (100 + targetArmor)*dmg_mult
+        else
+            dmg_mult = dmg_mult*1
+        end
+        local dmg = dmg_mult * self:GetDamage(target)
+        return dmg
+
+    elseif(self.spelldata.damagetype == DAMAGE_MIXED)then
+        --TODO
+        return self:GetDamage(target)
+
+    elseif(self.spelldata.damagetype == DAMAGE_TRUE)then
+        return self:GetDamage(target)
+    elseif(self.spelldata.damagetype == DAMAGE_OTHER)then
+        return self:GetDamage(target)
+    elseif(self.spelldata.damagetype == DAMAGE_OTHER)then
+        return self:GetDamage(target)
+    else --This should never happen
+        return self:GetDamage(target)
+    end
 end
