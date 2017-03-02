@@ -1,7 +1,7 @@
 --[[
     S1mple Sona
 --]]
-local version = 1.0
+local version = 1.1
 
 function RequireS1mpleLib(version)
     if(io.open(COMMON_PATH.."S1mpleLib.lua","r") == nil)then
@@ -40,21 +40,21 @@ end, width = 140, manacost = function(l) return 100 end})
 local menu
 
 function Menu()
-    menu = MenuElement({type = MENU, id = "S1mpleSona", name = "S1mple Sona [V "..tostring(version).."]", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/Sona.png"})
+    menu = MenuElement({type = MENU, id = "S1mpleSona", name = "S1mple Sona [V "..tostring(version).."]", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/Sona.png"})
     menu:MenuElement({type = MENU, id = "Combo", name = "Combo"})
 
-        menu.Combo:MenuElement({type = SPACE, name = " [Hymn of Valor] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaQ.png"})
+        menu.Combo:MenuElement({type = SPACE, name = " [Hymn of Valor] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaQ.png"})
         menu.Combo:MenuElement({id = "useQ", name = "Use Q", value = true})
         menu.Combo:MenuElement({id = "minEnemysQ", name = "Min Enemy Champions", value = 1, min = 1, max = 2, step = 1})
         menu.Combo:MenuElement({id = "minManaQ", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-        menu.Combo:MenuElement({type = SPACE, name = " [Song of Celerity] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaE.png"})
+        menu.Combo:MenuElement({type = SPACE, name = " [Song of Celerity] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaE.png"})
         menu.Combo:MenuElement({id = "useE", name = "Use E", value = true})
         menu.Combo:MenuElement({id = "minAllysE", name = "Min Ally Champions", value = 0, min = 0, max = 5, step = 1})
         menu.Combo:MenuElement({id = "minEnemysE", name = "Min Enemy Champions", value = 0, min = 0, max = 5, step = 1})
         menu.Combo:MenuElement({id = "minManaE", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-        menu.Combo:MenuElement({type = SPACE, name = " [Crescendo] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaR.png"})
+        menu.Combo:MenuElement({type = SPACE, name = " [Crescendo] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaR.png"})
         menu.Combo:MenuElement({id = "useR", name = "Use R", value = true})
         menu.Combo:MenuElement({id = "minEnemysR", name = "Min Enemy Champions", value = 1, min = 1, max = 5, step = 1})
         menu.Combo:MenuElement({id = "minManaR", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
@@ -62,29 +62,29 @@ function Menu()
 
     menu:MenuElement({type = MENU, id = "Harass", name = "Harass"})
 
-        menu.Harass:MenuElement({type = SPACE, name = " [Hymn of Valor] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaQ.png"})
+        menu.Harass:MenuElement({type = SPACE, name = " [Hymn of Valor] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaQ.png"})
         menu.Harass:MenuElement({id = "useQ", name = "Use Q", value = true})
         menu.Harass:MenuElement({id = "minEnemysQ", name = "Min Enemy Champions", value = 1, min = 1, max = 2, step = 1})
         menu.Harass:MenuElement({id = "minManaQ", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-        menu.Harass:MenuElement({type = SPACE, name = " [Song of Celerity] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaE.png"})
+        menu.Harass:MenuElement({type = SPACE, name = " [Song of Celerity] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaE.png"})
         menu.Harass:MenuElement({id = "useE", name = "Use E", value = true})
         menu.Harass:MenuElement({id = "minAllysE", name = "Min Ally Champions", value = 0, min = 0, max = 5, step = 1})
         menu.Harass:MenuElement({id = "minEnemysE", name = "Min Enemy Champions", value = 0, min = 0, max = 5, step = 1})
         menu.Harass:MenuElement({id = "minManaE", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-        menu.Harass:MenuElement({type = SPACE, name = " [Crescendo] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaR.png"})
+        menu.Harass:MenuElement({type = SPACE, name = " [Crescendo] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaR.png"})
         menu.Harass:MenuElement({id = "useR", name = "Use R", value = true})
         menu.Harass:MenuElement({id = "minEnemysR", name = "Min Enemy Champions", value = 1, min = 1, max = 5, step = 1})
         menu.Harass:MenuElement({id = "minManaR", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
         menu.Harass:MenuElement({id = "saveForR", name = "Save Mana for R", value = true})
 
     menu:MenuElement({type = MENU, id = "Laneclear", name = "Laneclear"})
-        menu.Laneclear:MenuElement({type = SPACE, name = " [Hymn of Valor] ", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaQ.png"})
+        menu.Laneclear:MenuElement({type = SPACE, name = " [Hymn of Valor] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaQ.png"})
         menu.Laneclear:MenuElement({id = "useQ", name = "Use Q", value = true})
         menu.Laneclear:MenuElement({id = "minManaQ", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-    menu:MenuElement({type = MENU, id = "Heal", name = "Heal Settings", leftIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaW.png"})
+    menu:MenuElement({type = MENU, id = "Heal", name = "Heal Settings", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaW.png"})
         menu.Heal:MenuElement({id = "useW", name = "Use W", value = true})
         menu.Heal:MenuElement({id = "healOnRecall", name = "Heal on Recall", value = false})
         menu.Heal:MenuElement({id = "minSelfManaW", name = "Min Self Heal Mana %", value = 0, min = 0, max = 100, step = 1})
@@ -101,7 +101,7 @@ function Menu()
         end
 
     menu:MenuElement({type = MENU, id = "misc", name = "Misc"})
-        menu.misc:MenuElement({id = "autoR", name = "Enable Auto R", value = true, rightIcon = "http://s1mplescripts.de/S1mple/Scripts/GoS/S1mpleSona/Images/SonaR.png"})
+        menu.misc:MenuElement({id = "autoR", name = "Enable Auto R", value = true, rightIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleSona/SonaR.png"})
         menu.misc:MenuElement({id = "autoRMinHits", name = "Auto R min Hits", value = 4, min = 1, max = 5, step = 1})
         menu.misc:MenuElement({id = "autoROnRecall", name = "Auto R on Recall", value = false})
 
