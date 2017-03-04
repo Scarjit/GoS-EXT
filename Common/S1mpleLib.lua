@@ -3,14 +3,39 @@
 ###############################
 ###############################
 ###############################
+Optimizations and Init
+###############################
+###############################
+###############################
+###############################
+--]]
+S1mpleLibVersion = 1.4
+local os = os
+local math = math
+local pairs = pairs
+local table = table
+local ipairs = ipairs
+local string = string
+
+math.randomseed(os.clock() + myHero.networkID + GetTickCount())
+
+--[[
+###############################
+###############################
+###############################
+###############################
 S1mpleLib Menu
 ###############################
 ###############################
 ###############################
 ###############################
 --]]
-S1mpleLibVersion = 1.3
-_G.S1mpleLibMenu = MenuElement({type = MENU, id = "S1mpleLib", name = "S1mpleLib [V" .. S1mpleLibVersion .. "]"})
+
+local menu_id = tostring(math.floor(math.random(1,22)))
+if(menu_id:len() == 1)then
+  menu_id = "0"..menu_id
+end
+_G.S1mpleLibMenu = MenuElement({type = MENU, id = "S1mpleLib", name = "S1mpleLib [V" .. S1mpleLibVersion .. "]", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleLib/80"..menu_id..".png"})
 
 --[[
 ###############################
@@ -24,6 +49,32 @@ Thanks to DelusionalLogic (github)
 ###############################
 ###############################
 --]]
+
+-- Circle Class
+--[[
+Methods:
+circle = Circle(center (opt),radius (opt))
+Function :
+circle:Contains(v) -- return if Vector point v is in the circle
+Members :
+circle.center -- Vector point for circle's center
+circle.radius -- radius of the circle
+]]
+class'Circle'
+function Circle:__init(center, radius)
+  assert((VectorType(center) or center == nil) and (type(radius) == "number" or radius == nil), "Circle: wrong argument types (expected <Vector> or nil, <number> or nil)")
+  self.center = Vector(center) or Vector()
+  self.radius = radius or 0
+end
+
+function Circle:Contains(v)
+  assert(VectorType(v), "Contains: wrong argument types (expected <Vector>)")
+  return math.close(self.center:dist(v), self.radius)
+end
+
+function Circle:__tostring()
+  return "{center: " .. tostring(self.center) .. ", radius: " .. tostring(self.radius) .. "}"
+end
 
 -- ===========================
 -- Minimum enclosing circle algorithm
