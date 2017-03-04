@@ -9,7 +9,7 @@ Optimizations and Init
 ###############################
 ###############################
 --]]
-S1mpleLibVersion = 1.4
+S1mpleLibVersion = 1.5
 local os = os
 local math = math
 local pairs = pairs
@@ -62,13 +62,13 @@ circle.radius -- radius of the circle
 ]]
 class'Circle'
 function Circle:__init(center, radius)
-  assert((VectorType(center) or center == nil) and (type(radius) == "number" or radius == nil), "Circle: wrong argument types (expected <Vector> or nil, <number> or nil)")
+  assert((Is3DVector(center) or center == nil) and (type(radius) == "number" or radius == nil), "Circle: wrong argument types (expected <Vector> or nil, <number> or nil)")
   self.center = Vector(center) or Vector()
   self.radius = radius or 0
 end
 
 function Circle:Contains(v)
-  assert(VectorType(v), "Contains: wrong argument types (expected <Vector>)")
+  assert(Is3DVector(v), "Contains: wrong argument types (expected <Vector>)")
   return math.close(self.center:dist(v), self.radius)
 end
 
