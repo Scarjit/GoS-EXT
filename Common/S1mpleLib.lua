@@ -9,7 +9,7 @@ S1mpleLib Menu
 ###############################
 ###############################
 --]]
-S1mpleLibVersion = 1.2
+S1mpleLibVersion = 1.3
 _G.S1mpleLibMenu = MenuElement({type = MENU, id = "S1mpleLib", name = "S1mpleLib [V" .. S1mpleLibVersion .. "]"})
 
 --[[
@@ -427,6 +427,64 @@ function DrawText3D (text, x, y, z, color, size)
   Draw.Text(text, size, wts.x, wts.y, color)
 end
 
+function Is3DVector(v)
+  if(v.x and v.y and v.z)then
+    return true
+  end
+end
+
+--[[
+VectorPointProjectionOnLineSegment: Extended VectorPointProjectionOnLine in 2D Space
+v1 and v2 are the start and end point of the linesegment
+v is the point next to the line
+return:
+pointSegment = the point closest to the line segment (table with x and y member)
+pointLine = the point closest to the line (assuming infinite extent in both directions) (table with x and y member), same as VectorPointProjectionOnLine
+isOnSegment = if the point closest to the line is on the segment
+]]
+function VectorPointProjectionOnLineSegment(v1, v2, v)
+  assert(v1 and v2 and v, "VectorPointProjectionOnLineSegment: wrong argument types (3 <Vector> expected)")
+  local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
+  local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) ^ 2 + (by - ay) ^ 2)
+  local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
+  local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
+  local isOnSegment = rS == rL
+  local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
+  return pointSegment, pointLine, isOnSegment
+end
+
+-- GetMinionCollision
+--[[
+Global Function :
+GetMinionCollision(posEnd, spellWidth) -> return true/false if collision with minion from player to posEnd with spellWidth.
+]]
+local function _minionInCollision(minion, posStart, posEnd, spellSqr, sqrDist)
+  if GetDistanceSqr(minion, posStart) < sqrDist and GetDistanceSqr(minion, posEnd) < sqrDist then
+    local _, p2, isOnLineSegment = VectorPointProjectionOnLineSegment(posStart, posEnd, minion)
+    if isOnLineSegment and GetDistanceSqr(minion, p2) <= spellSqr then return true end
+  end
+  return false
+end
+
+function GetMinionCollision(posStart, posEnd, spellWidth, minionTable)
+  assert(Is3DVector(posStart) and Is3DVector(posEnd) and type(spellWidth) == "number", "GetMinionCollision: wrong argument types (<Vector>, <Vector>, <number> expected)")
+  local sqrDist = GetDistanceSqr(posStart, posEnd)
+  local spellSqr = spellWidth * spellWidth / 4
+  if minionTable then
+    for _, minion in pairs(minionTable) do
+      if _minionInCollision(minion.pos, posStart, posEnd, spellSqr, sqrDist) then return true end
+    end
+  else
+    for i = 0, objManager.maxObjects, 1 do
+      local object = objManager:getObject(i)
+      if object and object.valid and object.team ~= player.team and object.type == "obj_AI_Minion" and not object.dead and object.visible and object.bTargetable then
+        if _minionInCollision(object, posStart, posEnd, spellSqr, sqrDist) then return true end
+      end
+    end
+  end
+  return false
+end
+
 --[[
 "Enum's"
 --]]
@@ -665,3 +723,127 @@ function AddCreateObjectCallbackMenu()
         end
       end
     end)
+
+  --[[
+  ###############################
+  ###############################
+  ###############################
+  ###############################
+  targetSelector
+  ###############################
+  ###############################
+  ###############################
+  ###############################
+  --]]
+
+  TARGET_LOW_HP = 1
+  TARGET_MOST_AP = 2
+  TARGET_MOST_AD = 3
+  TARGET_NEAR_MOUSE = 4
+  TARGET_PRIORITY = 5
+  TARGET_LOW_HP_PRIORITY = 6
+  TARGET_CLOSEST = 7
+
+  class("TargetSelector")
+  function TargetSelector:__init()
+    self.target_type = TARGET_PRIORITY
+    self:Menu()
+  end
+
+  function TargetSelector:Menu()
+    S1mpleLibMenu:MenuElement({type = MENU, id = "ts", name = "TargetSelector"})
+    self.menu = S1mpleLibMenu.ts
+    self.menu:MenuElement({id = "mode", name = "Target Selection Mode", value = TARGET_LOW_HP_PRIORITY, drop = {"Low HP", "Most AP", "Most AD", "Near Mouse", "Priority", "Low HP Priority", "Closest"}, callback = function(v) if(self.menu.mode) then self.target_type = self.menu.mode:Value() end end})
+    for i=1,#GetEnemyHeroes() do
+      local current = GetEnemyHeroes()[i]
+      self.menu:MenuElement({id = "prio"..current.charName, name = current.charName, value = 3, min = 1, max = 5, step = 1})
+    end
+  end
+
+  function TargetSelector:GetTarget(range, checkCollision, spellWidth)
+    local possible_targets = {}
+    for i=1,#GetEnemyHeroes() do
+      local enemy = GetEnemyHeroes()[i]
+      if enemy and enemy.valid and GetDistance(myHero, enemy) < range then
+        if(checkCollision)then
+          if(not GetMinionCollision(myHero.pos, enemy.pos, spellWidth, GetMinionsNear(myHero, range, TEAM_ENEMY)))then
+            possible_targets[#possible_targets+1] = enemy
+          end
+        else
+          possible_targets[#possible_targets+1] = enemy
+        end
+      end
+    end
+    if(#possible_targets == 0)then
+      return nil
+    end
+
+    local target = possible_targets[1]
+    local prio = self.menu["prio"..target.charName]:Value()
+
+    if(self.target_type == TARGET_LOW_HP)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(current.health < target.health)then
+          target = current
+        end
+      end
+    elseif(self.target_type == TARGET_MOST_AP)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(current.ap > target.ap)then
+          target = current
+        end
+      end
+    elseif(self.target_type == TARGET_MOST_AD)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(current.ad > target.ad)then
+          target = current
+        end
+      end
+    elseif(self.target_type == TARGET_NEAR_MOUSE)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(GetDistanceSqr(current, mousePos) < GetDistanceSqr(target, mousePos))then
+          target = current
+        end
+      end
+    elseif(self.target_type == TARGET_PRIORITY)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(self.menu["prio"..current.charName]:Value() > prio)then
+          target = current
+        end
+      end
+    elseif(self.target_type == TARGET_LOW_HP_PRIORITY)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(self.menu["prio"..current.charName]:Value() > prio)then
+          target = current
+        elseif (self.menu["prio"..current.charName]:Value() == prio)then
+          if(current.health < target.health)then
+            target = current
+          end
+        end
+      end
+    elseif(self.target_type == TARGET_CLOSEST)then
+      for i=1,#possible_targets do
+        local current = possible_targets[i]
+        if(GetDistanceSqr(current, myHero) < GetDistanceSqr(target, myHero))then
+          target = current
+        end
+      end
+    end
+
+    return target, prio
+  end
+
+  TargetSelector = TargetSelector()
+
+  --[[
+
+  Credits:
+  - gReY (VectorPointProjectionOnLineSegment)
+
+  --]]
