@@ -1,7 +1,7 @@
 --[[
     S1mple Sona
 --]]
-local version = 1.1
+local version = 1.2
 
 function RequireS1mpleLib(version)
     if(io.open(COMMON_PATH.."S1mpleLib.lua","r") == nil)then
@@ -18,7 +18,7 @@ function RequireS1mpleLib(version)
     return true
 end
 
-if not RequireS1mpleLib(1.0) then return end
+if not RequireS1mpleLib(1.5) then return end
 
 
 local Q = Spell(_Q, {range = 850, type = TARGET_UNTARGETED, damagetype = DAMAGE_MAGIC, damageformular = function(s,t,l)
