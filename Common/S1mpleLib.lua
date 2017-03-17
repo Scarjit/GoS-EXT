@@ -1,3 +1,4 @@
+require "DamageLib"
 --[[
 ###############################
 ###############################
@@ -36,341 +37,6 @@ if(menu_id:len() == 1)then
   menu_id = "0"..menu_id
 end
 _G.S1mpleLibMenu = MenuElement({type = MENU, id = "S1mpleLib", name = "S1mpleLib [V" .. S1mpleLibVersion .. "]", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleLib/80"..menu_id..".png"})
-
---[[
-###############################
-###############################
-###############################
-###############################
-Minimum Enclosing Circle
-Thanks to DelusionalLogic (github)
-###############################
-###############################
-###############################
-###############################
---]]
-
--- Circle Class
---[[
-Methods:
-circle = Circle(center (opt),radius (opt))
-Function :
-circle:Contains(v) -- return if Vector point v is in the circle
-Members :
-circle.center -- Vector point for circle's center
-circle.radius -- radius of the circle
-]]
-class'Circle'
-function Circle:__init(center, radius)
-  assert((Is3DVector(center) or center == nil) and (type(radius) == "number" or radius == nil), "Circle: wrong argument types (expected <Vector> or nil, <number> or nil)")
-  self.center = Vector(center) or Vector()
-  self.radius = radius or 0
-end
-
-function Circle:Contains(v)
-  assert(Is3DVector(v), "Contains: wrong argument types (expected <Vector>)")
-  return math.close(self.center:dist(v), self.radius)
-end
-
-function Circle:__tostring()
-  return "{center: " .. tostring(self.center) .. ", radius: " .. tostring(self.radius) .. "}"
-end
-
--- ===========================
--- Minimum enclosing circle algorithm
--- ---------------------------
--- Much of this code was inspired from the ruby implementation at:
--- [http://www.dseifert.net/code/mec/source.html]
--- ===========================
-
--- ===========================
--- Copy the array portion of the table.
--- ===========================
-function CopyArray(t)
-  local ret = {}
-  for i,v in ipairs(t) do
-    ret[i] = v
-  end
-  return ret
-end
-
--- ===========================
--- Create a new array, minus the element at the specified index
--- ===========================
-function DeleteAt(t, index)
-  local ret = {}
-  for i,v in ipairs(t) do
-    if i ~= index then
-      table.insert(ret, v)
-    end
-  end
-  return ret
-end
-
--- ===========================
--- Joins arrays t1 and t2 and outputs only the unique elements.
--- ===========================
-function JoinUniqueArrayElements(t1, t2)
-  local ret = {}
-  local unique = {}
-  -- Place the elements of t1 and t2 into the unique dictionary
-  for i,p in ipairs(t1) do
-    unique["x" .. p.x .. "z" .. p.z] = p
-  end
-  for i,p in ipairs(t2) do
-    unique["x" .. p.x .. "z" .. p.z] = p
-  end
-  -- Insert each element of unique into the return array.
-  for k,p in pairs(unique) do
-    table.insert(ret, p)
-  end
-  return ret
-end
-
--- ===========================
--- Minimum Enclosing Circle object and algorithm
--- ===========================
-MEC = {
-  -- ===========================
-  -- Create a new MEC table
-  -- ===========================
-  New = function(self, points)
-    local mec = {}
-    mec = setmetatable({}, {__index = self})
-    mec.circle = nil
-    mec.points = {} -- a table of x,z coordinates
-
-    if points then
-      mec:SetPoints(points)
-    end
-
-    return mec
-  end,
-
-  -- ===========================
-  -- Set the points used to compute the MEC.
-  -- points is an array, starting at 1.
-  -- ===========================
-  SetPoints = function(self, points)
-    -- Set the points
-    self.points = points
-    for i, p in ipairs(self.points) do
-      p = Vector:New(p)
-    end
-  end,
-
-  -- ===========================
-  -- Computes the half hull of a set of points
-  -- ===========================
-  HalfHull = function(left, right, pointTable, factor)
-    local input = CopyArray(pointTable)
-    table.insert(input, right)
-    local half = {}
-    table.insert(half, left)
-    for i,p in ipairs(input) do
-      table.insert(half, p)
-      while #half >= 3 do
-        local dir = factor * Vector.Direction(half[(#half+1)-3], half[(#half+1)-1], half[(#half+1)-2])
-        if dir <= 0 then
-          half = DeleteAt(half, #half-1)
-        else
-          break
-        end
-      end
-    end
-    return half
-  end,
-
-  -- ===========================
-  -- Computes the set of points that represent the
-  -- convex hull of the set of points
-  -- ===========================
-  ConvexHull = function(self)
-    local a = self.points
-    local left = a[1]
-    local right = a[#a]
-    local upper = {}
-    local lower = {}
-
-    -- Partition remaining points into upper and lower buckets.
-    for i = 2, #a-1 do
-      local dir = Vector.Direction(left, right, a[i])
-      if dir < 0 then
-        table.insert(upper, a[i])
-      else
-        table.insert(lower, a[i])
-      end
-    end
-
-    local upperHull = self.HalfHull(left, right, upper, -1)
-    local lowerHull = self.HalfHull(left, right, lower, 1)
-
-    return JoinUniqueArrayElements(upperHull, lowerHull)
-  end,
-
-  -- ===========================
-  -- Compute the MEC.
-  -- ===========================
-  Compute = function(self)
-    self.circle = self.circle or Circle:New()
-
-    -- Make sure there are some points.
-    if #self.points == 0 then return self.circle end
-
-    -- Handle degenerate cases first
-    if #self.points == 1 then
-      self.circle.center = self.points[1]
-      self.circle.radius = 0
-      self.circle.radiusPoint = self.points[1]
-    elseif #self.points == 2 then
-      local a = self.points
-      self.circle.center = a[1]:Center(a[2])
-      self.circle.radius = a[1]:Distance(self.circle.center)
-      self.circle.radiusPoint = a[1]
-    else
-      local a = self:ConvexHull()
-      local point_a = a[1]
-      local point_b = nil
-      local point_c = a[2]
-
-      if not point_c then
-        self.circle.center = point_a
-        self.circle.radius = 0
-        self.circle.radiusPoint = point_a
-        return self.circle
-      end
-
-      -- Loop until we get appropriate values for point_a and point_c
-      while true do
-        point_b = nil
-        local best_theta = 180.0
-        -- Search for the point "b" which subtends the smallest angle a-b-c.
-        for i,point in ipairs(self.points) do
-          if (not point:Equals(point_a)) and (not point:Equals(point_c)) then
-            local theta_abc = point:AngleBetween(point_a, point_c)
-            if theta_abc < best_theta then
-              point_b = point
-              best_theta = theta_abc
-            end
-          end
-        end
-        -- If the angle is obtuse, then line a-c is the diameter of the circle,
-        -- so we can return.
-        if best_theta >= 90.0 or (not point_b) then
-          self.circle.center = point_a:Center(point_c)
-          self.circle.radius = point_a:Distance(self.circle.center)
-          self.circle.radiusPoint = point_a
-          return self.circle
-        end
-        local ang_bca = point_c:AngleBetween(point_b, point_a)
-        local ang_cab = point_a:AngleBetween(point_c, point_b)
-        if ang_bca > 90.0 then
-          point_c = point_b
-        elseif ang_cab <= 90.0 then
-          break
-        else
-          point_a = point_b
-        end
-      end
-      local ch1 = (point_b - point_a):Scale(0.5)
-      local ch2 = (point_c - point_a):Scale(0.5)
-      local n1 = ch1:NormalLeft()
-      local n2 = ch2:NormalLeft()
-      ch1 = point_a + ch1
-      ch2 = point_a + ch2
-      self.circle.center = Vector.InfLineIntersection (ch1, n1, ch2, n2)
-      self.circle.radius = self.circle.center:Distance(point_a)
-      self.circle.radiusPoint = point_a
-    end
-    return self.circle
-  end,
-}
-
-function __check_if_target(obj,range,R)
-  return obj ~= nil and obj.team == TEAM_ENEMY and not obj.dead and obj.visible and player:GetDistance(obj) <= (range + R)
-  --return obj ~= nil
-end
-
-function __check_if_near_target(obj,target,range,R)
-  return obj ~= nil and obj.team == target.team and not obj.dead and obj.visible and obj:GetDistance(target) <= R*2
-end
-
-function FindGroupCenterNearTarget(target,R,range)
-  local playerCount = heroManager.iCount
-  local points = {}
-  for i = 1, playerCount, 1 do
-    local object = heroManager:GetHero(i)
-    if __check_if_near_target(object,target,range,R) or object == target then -- finding enemies near our target. grouping them in points table.
-      table.insert(points, Vector:New(object.x,object.z))
-    end
-  end
-  return CalcSpellPosForGroup(R,range,points)
-end
-
-function FindGroupCenterFromNearestEnemies(R,range)
-  local playerCount = heroManager.iCount
-  local points = {}
-  for i = 1, playerCount, 1 do
-    local object = heroManager:GetHero(i)
-    if __check_if_target(object,range,R) then -- finding enemies in our range (spell range + AoE radius) and grouping them in points table.
-      table.insert(points, Vector:New(object.x,object.z))
-    end
-  end
-  return CalcSpellPosForGroup(R,range,points)
-end
-
--- ============================================================
--- Weee's additional stuff:
--- ============================================================
-
--- =======================
--- CalcCombosFromString is used to fill table "comboTableToFill[]" with unique
--- combinations (with size of comboSize) generated from table "targetsTable[]".
--- =======================
-function CalcCombosFromString(comboString,index_number,comboSize,targetsTable,comboTableToFill)
-  if string.len(comboString) == comboSize then
-    local b = {}
-    for i=1,string.len(comboString),1 do
-      local ai = tonumber(string.sub(comboString,i,i))
-      table.insert(b,targetsTable[ai])
-    end
-    return table.insert(comboTableToFill,b)
-  end
-  for i = index_number, #targetsTable, 1 do
-    CalcCombosFromString(comboString..i,i+1,comboSize,targetsTable,comboTableToFill)
-  end
-end
-
--- =======================
--- CalcSpellPosForGroup is used to get optimal position for your AoE circle spell (annie ult, brand W, etc).
--- It will always return MEC with position, where spell will hit most players and where players will be staying closer to each other.
--- =======================
-function CalcSpellPosForGroup(spellRadius,spellRange,enemyTable)
-  if #enemyTable == 1 then
-    return { center = { x = enemyTable[1].x, z = enemyTable[1].z } }
-  end
-  local combos = {
-    [5] = {}, -- 5-player combos
-    [4] = {}, -- 4-player combos
-    [3] = {}, -- 3-player combos
-    [2] = {}, -- 2-player combos
-  }
-  mec = MEC:New()
-  for j = #enemyTable,2,-1 do
-    CalcCombosFromString("",1,j,enemyTable,combos[j])
-    local spellPos = nil
-    for i,v in ipairs(combos[j]) do
-      mec:SetPoints(v)
-      local c = mec:Compute()
-      if c.radius <= spellRadius and (spellPos == nil or c.radius < spellPos.radius) then
-        spellPos = Circle:New()
-        spellPos.center = c.center
-        spellPos.radius = c.radius
-      end
-    end
-    if spellPos ~= nil then return spellPos end
-  end
-end
 
 --[[
 ###############################
@@ -437,8 +103,12 @@ function GetMinionsNear(target, range, team)
   local minions = {}
   for i=1,Game.MinionCount() do
     local m = Game.Minion(i)
-    if m and m.valid and m.visible and not m.dead and (team and m.team == team or true) and GetDistance(m, target) < range then
-      minions[#minions+1] = m
+    if m and m.valid and m.visible and not m.dead and GetDistance(m, target) < range then
+      if(team and m.team == team)then
+        minions[#minions+1] = m
+      elseif(not team)then
+        minions[#minions+1] = m
+      end
     end
   end
   return minions
@@ -465,9 +135,18 @@ function math.perc(current, max)
   return current/max*100
 end
 
+function math.round(num, idp)
+  assert(type(num) == "number", "math.round: wrong argument types (<number> expected for num)")
+  assert(type(idp) == "number" or idp == nil, "math.round: wrong argument types (<integer> expected for idp)")
+  local mult = 10 ^ (idp or 0)
+  if num >= 0 then return math.floor(num * mult + 0.5) / mult
+  else return math.ceil(num * mult - 0.5) / mult
+  end
+end
+
 function WorldToScreen (obj)
   if not obj.x then obj = obj.pos end
-  local V = Vector(obj.x, obj.y, obj.z)
+  local V = GoSVector(obj.x, obj.y, obj.z)
   return V:To2D()
 end
 
@@ -478,62 +157,35 @@ function DrawText3D (text, x, y, z, color, size)
   Draw.Text(text, size, wts.x, wts.y, color)
 end
 
-function Is3DVector(v)
-  if(v.x and v.y and v.z)then
-    return true
-  end
-end
+function IsFacing(source, target) --Thanks to Bananaraka (http://gamingonsteroids.com/topic/19189-)
+  local sD = {x = source.dir.x, z = source.dir.z}
+  local tD = {x = target.dir.x, z = target.dir.z}
+  local sP = {x = source.pos.x, z = source.pos.z}
+  local tP = {x = target.pos.x, z = target.pos.z}
 
---[[
-VectorPointProjectionOnLineSegment: Extended VectorPointProjectionOnLine in 2D Space
-v1 and v2 are the start and end point of the linesegment
-v is the point next to the line
-return:
-pointSegment = the point closest to the line segment (table with x and y member)
-pointLine = the point closest to the line (assuming infinite extent in both directions) (table with x and y member), same as VectorPointProjectionOnLine
-isOnSegment = if the point closest to the line is on the segment
-]]
-function VectorPointProjectionOnLineSegment(v1, v2, v)
-  assert(v1 and v2 and v, "VectorPointProjectionOnLineSegment: wrong argument types (3 <Vector> expected)")
-  local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
-  local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) ^ 2 + (by - ay) ^ 2)
-  local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
-  local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
-  local isOnSegment = rS == rL
-  local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
-  return pointSegment, pointLine, isOnSegment
-end
-
--- GetMinionCollision
---[[
-Global Function :
-GetMinionCollision(posEnd, spellWidth) -> return true/false if collision with minion from player to posEnd with spellWidth.
-]]
-local function _minionInCollision(minion, posStart, posEnd, spellSqr, sqrDist)
-  if GetDistanceSqr(minion, posStart) < sqrDist and GetDistanceSqr(minion, posEnd) < sqrDist then
-    local _, p2, isOnLineSegment = VectorPointProjectionOnLineSegment(posStart, posEnd, minion)
-    if isOnLineSegment and GetDistanceSqr(minion, p2) <= spellSqr then return true end
-  end
-  return false
-end
-
-function GetMinionCollision(posStart, posEnd, spellWidth, minionTable)
-  assert(Is3DVector(posStart) and Is3DVector(posEnd) and type(spellWidth) == "number", "GetMinionCollision: wrong argument types (<Vector>, <Vector>, <number> expected)")
-  local sqrDist = GetDistanceSqr(posStart, posEnd)
-  local spellSqr = spellWidth * spellWidth / 4
-  if minionTable then
-    for _, minion in pairs(minionTable) do
-      if _minionInCollision(minion.pos, posStart, posEnd, spellSqr, sqrDist) then return true end
-    end
-  else
-    for i = 0, objManager.maxObjects, 1 do
-      local object = objManager:getObject(i)
-      if object and object.valid and object.team ~= player.team and object.type == "obj_AI_Minion" and not object.dead and object.visible and object.bTargetable then
-        if _minionInCollision(object, posStart, posEnd, spellSqr, sqrDist) then return true end
-      end
+  local dot = sD.x*tD.x + sD.z*tD.z
+  if(dot < 0)then
+    if (sD.x > 0 and sD.z > 0) then
+      return ((tP.x - sP.x > 0) and (tP.z - sP.z > 0))
+    elseif (sD.x < 0 and sD.z < 0) then
+      return ((tP.x - sP.x < 0) and (tP.z - sP.z < 0))
+    elseif (sD.x > 0 and sD.z < 0) then
+      return ((tP.x - sP.x > 0) and (tP.z - sP.z < 0))
+    elseif (sD.x < 0 and sD.z > 0) then
+      return ((tP.x - sP.x < 0) and (tP.z - sP.z > 0))
     end
   end
   return false
+end
+
+function GetFacing(source, targets, range)
+  local n = {}
+  for i=1,#targets do
+    if(IsFacing(source, targets[i]) and GetDistance(source, targets[i]) < range)then
+      n[#n+1] = targets[i]
+    end
+  end
+  return n
 end
 
 --[[
@@ -576,8 +228,6 @@ SpellSlot = {_Q, _W, _E, _R,
   SUMMONER_1, SUMMONER_2}
 SpellData = {
   type (number)
-  damagetype (number)
-  damageformular (function(self, target, level))
   manacost (function(level))
 
   for non self:
@@ -603,10 +253,14 @@ function Spell:__init (SpellSlot,SpellData)
 end
 
 function Spell:Cast(targetorX, Y, Z)
+    --Make sure cursor is over target. .... Gos pls fix
+
   if Game.CanUseSpell(self.slot) ~= READY then return end
   if(type(targetorX) ~= "number" and targetorX ~= nil)then
+    Control.SetCursorPos(targetorX)
     Control.CastSpell(self.castSlot, targetorX.pos.x,targetorX.pos.y, targetorX.pos.z)
   elseif(type(targetorX) == "number")then
+    Control.SetCursorPos(targetorX, Z)
     Control.CastSpell(self.castSlot, targetorX, Y, Z)
   else
     Control.CastSpell(self.castSlot)
@@ -621,11 +275,9 @@ function Spell:CanUseSpell(target)
   end
 end
 
-function Spell:GetDamage(target)
-  if(myHero:GetSpellData(self.slot).level == 0)then
-    return 0
-  end
-  return self.spelldata.damageformular(myHero, target, myHero:GetSpellData(self.slot).level)
+function Spell:GetDamage(target, source, stagedmg, spelllvl)
+  local slots = {_Q = "Q", _W = "W", _E = "E", _R = "R"}
+  return getdmg(slots[self.slot], target, source, stagedmg, spelllvl)
 end
 
 function Spell:GetManaCost (level)
@@ -635,46 +287,6 @@ end
 
 function Spell:GetLevel ()
   return myHero:GetSpellData(self.slot).level
-end
-
-function Spell:GetRealDamage(target)
-  if(not self:CanUseSpell(target))then return 0 end
-
-  if(self.spelldata.damagetype == DAMAGE_MAGIC)then
-    local dmg_mult = 1
-    local targetArmor = target.magicResist * myHero.magicPenPercent - myHero.magicPen
-    if targetArmor >= 0 then
-      dmg_mult = 100 / (100 + targetArmor)*dmg_mult
-    else
-      dmg_mult = dmg_mult*1
-    end
-    local dmg = dmg_mult * self:GetDamage(target)
-    return dmg
-
-  elseif(self.spelldata.damagetype == DAMAGE_PHYSIC)then
-    local dmg_mult = 1
-    local targetArmor = target.armor * myHero.armorPenPercent - myHero.armorPen
-    if targetArmor >= 0 then
-      dmg_mult = 100 / (100 + targetArmor)*dmg_mult
-    else
-      dmg_mult = dmg_mult*1
-    end
-    local dmg = dmg_mult * self:GetDamage(target)
-    return dmg
-
-  elseif(self.spelldata.damagetype == DAMAGE_MIXED)then
-    --TODO
-    return self:GetDamage(target)
-
-  elseif(self.spelldata.damagetype == DAMAGE_TRUE)then
-    return self:GetDamage(target)
-  elseif(self.spelldata.damagetype == DAMAGE_OTHER)then
-    return self:GetDamage(target)
-  elseif(self.spelldata.damagetype == DAMAGE_OTHER)then
-    return self:GetDamage(target)
-  else --This should never happen
-    return self:GetDamage(target)
-  end
 end
 
 --[[
@@ -815,7 +427,7 @@ function AddCreateObjectCallbackMenu()
     local possible_targets = {}
     for i=1,#GetEnemyHeroes() do
       local enemy = GetEnemyHeroes()[i]
-      if enemy and enemy.valid and GetDistance(myHero, enemy) < range then
+      if enemy and enemy.valid and not enemy.dead and GetDistance(myHero, enemy) < range then
         if(checkCollision)then
           if(not GetMinionCollision(myHero.pos, enemy.pos, spellWidth, GetMinionsNear(myHero, range, TEAM_ENEMY)))then
             possible_targets[#possible_targets+1] = enemy
