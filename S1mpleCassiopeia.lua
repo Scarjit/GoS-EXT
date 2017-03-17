@@ -1,7 +1,7 @@
 --[[
 S1mple Cassio
 ]]--
-local version = 0.4
+local version = 0.5
 
 local s1lib = require "S1mpleLib"
 if not s1lib then
@@ -333,10 +333,10 @@ Callback.Add("Draw", function()
   end)
 
 function isPoisoned(target)
-  	for i=0, target.buffCount do
-  		local b = target:GetBuff(i)
-  		if b and b.count > 0 and (b.name == "cassiopeiaqdebuff" or b.name == "cassiopeiawpoison")  then
-  			return true
-  		end
-  	end
+  for i=0, target.buffCount do
+    local b = target:GetBuff(i)
+    if b and b.count > 0 and (b.name == "cassiopeiaqdebuff" or b.name == "cassiopeiawpoison") then
+      return true
+    end
+  end
 end
