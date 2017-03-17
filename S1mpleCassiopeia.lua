@@ -1,7 +1,7 @@
 --[[
 S1mple Cassio
 ]]--
-local version = 0.1
+local version = 0.2
 
 local s1lib = require "S1mpleLib"
 if not s1lib then
@@ -185,7 +185,7 @@ function CastE(mode)
     if(mode == "Combo" or mode == "Harass")then
       if(m.eOnlyPoisoned:Value())then
         local target = TargetSelector:GetTarget(E.spelldata.range)
-        if(target and target.isPoisoned)then
+        if(target and isPoisoned(target))then
           E:Cast(target)
         else
           for i=1,#GetEnemyHeroes() do
@@ -204,7 +204,7 @@ function CastE(mode)
       if(m.eOnlyPoisoned:Value())then
         for i=1,#GetMinionsNear(myHero, E.spelldata.range, TEAM_ENEMY) do
           local current = GetMinionsNear(myHero, E.spelldata.range, TEAM_ENEMY)[i]
-          if(current.isPoisoned)then
+          if(isPoisoned(current))then
             E:Cast(current)
           end
         end
@@ -218,7 +218,7 @@ function CastE(mode)
       if(m.eOnlyPoisoned:Value())then
         for i=1,#GetMinionsNear(myHero, E.spelldata.range, TEAM_ENEMY) do
           local current = GetMinionsNear(myHero, E.spelldata.range, TEAM_ENEMY)[i]
-          if(current.isPoisoned and current.health < E:GetDamage(current, myHero))then
+          if(isPoisoned(current) and current.health < E:GetDamage(current, myHero))then
             E:Cast(current)
           end
         end
@@ -331,3 +331,12 @@ Callback.Add("Tick", function()
 Callback.Add("Draw", function()
     SpellRangeDraws()
   end)
+
+function isPoisoned(target)
+  	for i=0, target.buffCount do
+  		local b = target:GetBuff(i)
+  		if b and b.count > 0 and (b.name == "cassiopeiaqdebuff" or b.name == "cassiopeiawpoison")  then
+  			return true
+  		end
+  	end
+end
