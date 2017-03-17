@@ -1,7 +1,7 @@
 --[[
 S1mple Cassio
 ]]--
-local version = 0.3
+local version = 0.4
 
 local s1lib = require "S1mpleLib"
 if not s1lib then
@@ -56,7 +56,7 @@ function Menu()
   menu.Combo:MenuElement({id = "eOnlyPoisoned", name = "Only targed poisoned", value = true})
   menu.Combo:MenuElement({id = "minManaE", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-  menu.Combo:MenuElement({type = SPACE, name = " [Petrifing Glaze] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleCassiopeia/CassiopeiaR.png"})
+  menu.Combo:MenuElement({type = SPACE, name = " [Petrifying Gaze] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleCassiopeia/CassiopeiaR.png"})
   menu.Combo:MenuElement({id = "useR", name = "Use R", value = true})
   menu.Combo:MenuElement({id = "minManaR", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
   menu.Combo:MenuElement({id = "minFacing", name = "Min Enemies facing you", value = 2, min = 1, max = 5, step = 1})
@@ -76,7 +76,7 @@ function Menu()
   menu.Harass:MenuElement({id = "eOnlyPoisoned", name = "Only targed poisoned", value = true})
   menu.Harass:MenuElement({id = "minManaE", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
 
-  menu.Harass:MenuElement({type = SPACE, name = " [Petrifing Glaze] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleCassiopeia/CassiopeiaR.png"})
+  menu.Harass:MenuElement({type = SPACE, name = " [Petrifying Gaze] ", leftIcon = "https://raw.githubusercontent.com/Scarjit/GoS-EXT/master/Images/S1mpleCassiopeia/CassiopeiaR.png"})
   menu.Harass:MenuElement({id = "useR", name = "Use R", value = true})
   menu.Harass:MenuElement({id = "minManaR", name = "Min Mana %", value = 0, min = 0, max = 100, step = 1})
   menu.Harass:MenuElement({id = "minFacing", name = "Min Enemies facing you", value = 2, min = 1, max = 5, step = 1})
