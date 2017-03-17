@@ -10,7 +10,7 @@ Optimizations and Init
 ###############################
 ###############################
 --]]
-S1mpleLibVersion = 1.6
+S1mpleLibVersion = 1.7
 local os = os
 local math = math
 local pairs = pairs
@@ -144,19 +144,6 @@ function math.round(num, idp)
   end
 end
 
-function WorldToScreen (obj)
-  if not obj.x then obj = obj.pos end
-  local V = GoSVector(obj.x, obj.y, obj.z)
-  return V:To2D()
-end
-
-function DrawText3D (text, x, y, z, color, size)
-  size = size or 12
-  color = color or Draw.Color(255,255,255,255)
-  local wts = WorldToScreen({x = x, y = y, z = z})
-  Draw.Text(text, size, wts.x, wts.y, color)
-end
-
 function IsFacing(source, target) --Thanks to Bananaraka (http://gamingonsteroids.com/topic/19189-)
   local sD = {x = source.dir.x, z = source.dir.z}
   local tD = {x = target.dir.x, z = target.dir.z}
@@ -186,6 +173,91 @@ function GetFacing(source, targets, range)
     end
   end
   return n
+end
+
+--[[
+###############################
+###############################
+###############################
+###############################
+Draw Stuff
+###############################
+###############################
+###############################
+###############################
+--]]
+
+function WorldToScreen (obj)
+  if not obj.x then obj = obj.pos end
+  local V = GoSVector(obj.x, obj.y, obj.z)
+  return V:To2D()
+end
+
+function Draw.DrawText3D(text, x, y, z, color, size)
+  size = size or 12
+  color = color or Draw.Color(255,255,255,255)
+  local wts = WorldToScreen({x = x, y = y, z = z})
+  Draw.Text(text, size, wts.x, wts.y, color)
+end
+
+function Draw.RectOutline(x, y, width, height, color, borderWidth)
+    local x = math.min(x, x + width)
+    local y = math.min(y, y + width)
+    local width = math.abs(width)
+    local height = math.abs(height)
+    Draw.Rect(x, y, width, borderWidth, color)
+    Draw.Rect(x, y, borderWidth, height, color)
+    Draw.Rect(x, y + height - borderWidth, width, borderWidth, color)
+    Draw.Rect(x + width - borderWidth, y, borderWidth, height, color)
+end
+
+function Draw.LineBorder(x1, y1, x2, y2, size, color, width)
+    local o = { x = -(y2 - y1), y = x2 - x1 }
+    local len = math.sqrt(o.x ^ 2 + o.y ^ 2)
+    o.x, o.y = o.x / len * size / 2, o.y / len * size / 2
+    local points = {
+        {x = x1 + o.x, y = y1 + o.y},
+        {x = x1 - o.x, y = y1 - o.y},
+        {x = x2 - o.x, y = y2 - o.y},
+        {x = x2 + o.x, y = y2 + o.y},
+        {x = x1 + o.x, y = y1 + o.y},
+    }
+    Draw.Lines2(points, width or 1, color or Draw.Color(255,255,255,255))
+end
+
+function Draw.Lines2(points, width, color)
+    for i=1,#points-1 do
+        local point = points[i]
+        local next = points[i+1]
+        if(not point.nodraw)then
+            Draw.Line(point.x, point.y, next.x, next.y, width, color)
+        end
+    end
+end
+
+function Draw.Arrow(posStartX, posStartY, posEndX, posEndY, size, color, opening)
+    local startPoint = Vector({x = posStartX, y = posStartY})
+    local endPoint = Vector({x = posEndX, y = posEndY})
+
+    local dx = endPoint.x - startPoint.x
+    local dy = endPoint.y - startPoint.y
+
+    local lenght = math.sqrt(dx*dx+dy*dy)
+    local unitDx = dx/lenght
+    local unitDy = dy/lenght
+
+    local arrowHeadBoxSize = opening
+
+    local arrowPoint1 = Vector({x = endPoint.x - unitDx * arrowHeadBoxSize - unitDy * arrowHeadBoxSize,
+                                y = endPoint.y - unitDy * arrowHeadBoxSize + unitDx * arrowHeadBoxSize})
+
+    local arrowPoint2 = Vector({x = endPoint.x - unitDx * arrowHeadBoxSize + unitDy * arrowHeadBoxSize,
+                                y = endPoint.y - unitDy * arrowHeadBoxSize - unitDx * arrowHeadBoxSize})
+
+    Draw.Line(startPoint, endPoint)
+    Draw.Line(arrowPoint1, endPoint)
+    Draw.Line(arrowPoint2, endPoint)
+
 end
 
 --[[
