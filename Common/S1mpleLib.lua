@@ -10,7 +10,7 @@ Optimizations and Init
 ###############################
 ###############################
 --]]
-S1mpleLibVersion = 1.5
+S1mpleLibVersion = 1.6
 local os = os
 local math = math
 local pairs = pairs
