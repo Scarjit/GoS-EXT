@@ -1,7 +1,7 @@
 --[[
 S1mple Cassio
 ]]--
-local version = 0.5
+local version = 0.6
 
 local s1lib = require "S1mpleLib"
 if not s1lib then
@@ -200,7 +200,7 @@ function CastE(mode)
           E:Cast(TargetSelector:GetTarget(E.spelldata.range))
         end
       end
-    elseif(mode == "LaneClear")then
+    elseif(mode == "Laneclear")then
       if(m.eOnlyPoisoned:Value())then
         for i=1,#GetMinionsNear(myHero, E.spelldata.range, TEAM_ENEMY) do
           local current = GetMinionsNear(myHero, E.spelldata.range, TEAM_ENEMY)[i]
@@ -237,7 +237,7 @@ end
 function CastW(mode)
   local m = menu[mode]
   if(m.useW:Value() and m.minManaW:Value() < math.perc(myHero.mana, myHero.maxMana))then
-    if(mode == "LaneClear")then
+    if(mode == "Laneclear")then
       for i=1,#GetMinionsNear(myHero, W.spelldata.range, TEAM_ENEMY) do
         local current = GetMinionsNear(myHero, W.spelldata.range, TEAM_ENEMY)[i]
         if(GetDistance(myHero, current) > W.spelldata.rangemin)then
@@ -268,7 +268,7 @@ function CastQ(mode)
       if(TargetSelector:GetTarget(Q.spelldata.range))then
         Q:Cast(TargetSelector:GetTarget(Q.spelldata.range))
       end
-    elseif(mode == "LaneClear")then
+    elseif(mode == "Laneclear")then
       for i=1,#GetMinionsNear(myHero, Q.spelldata.range, TEAM_ENEMY) do
         local current = GetMinionsNear(myHero, Q.spelldata.range, TEAM_ENEMY)[i]
         Q:Cast(current)
