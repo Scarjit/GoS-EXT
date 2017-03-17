@@ -1,14 +1,14 @@
 --[[
 S1mple Cassio
 ]]--
-local version = 0.2
+local version = 0.3
 
 local s1lib = require "S1mpleLib"
 if not s1lib then
   print("[Error] Missing Libary, please reload")
   return
 end
-if S1mpleLibVersion < 1.5 then
+if S1mpleLibVersion < 1.6 then
   print("[Error] Outdated S1mpleLib Version")
   return
 end
