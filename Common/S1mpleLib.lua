@@ -10,7 +10,7 @@ Optimizations and Init
 ###############################
 ###############################
 --]]
-S1mpleLibVersion = 1.8
+S1mpleLibVersion = 1.9
 local os = os
 local math = math
 local pairs = pairs
@@ -128,9 +128,18 @@ function IsRecalling(unit)
 end
 
 function GetOrbWalkerMode ()
-    if(_G.Orbwalker.Enabled:Value())then
-            return (_G.Orbwalker.Combo:Value() and "Combo") or (_G.Orbwalker.Harass:Value() and "Harass") or (_G.Orbwalker.Farm:Value() and "Farm") or (_G.Orbwalker.LastHit:Value() and "LastHit") or "None"
+    --Noddys Orbwalker
+    if(_G.Orbwalker and _G.Orbwalker.myName)then
+        local mode = _G.Orbwalker:GetMode()
+        if(mode == "Clear")then
+            return "Farm"
+        elseif (mode == "Lasthit")then
+            return "LastHit"
+        end
+        return mode
     end
+
+    --External Orbwalker
     if(EOW)then
         if(EOW:Mode() == "LaneClear")then
             return "Farm"
@@ -138,9 +147,17 @@ function GetOrbWalkerMode ()
             return EOW:Mode()
         end
     end
+
+    --Ic's Orbwalker
     if(_G.SDK and _G.SDK.Orbwalker)then
         return (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] and "Combo" or _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS] and "Harass" or _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEAR] and "Farm" or _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT] and "LastHit") or "None"
     end
+
+    --Fallback to default
+    if(_G.Orbwalker.Enabled:Value())then
+        return (_G.Orbwalker.Combo:Value() and "Combo") or (_G.Orbwalker.Harass:Value() and "Harass") or (_G.Orbwalker.Farm:Value() and "Farm") or (_G.Orbwalker.LastHit:Value() and "LastHit") or "None"
+    end
+
     return "None"
 end
 
